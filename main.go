@@ -5,16 +5,25 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"pinger/action"
 	"reflect"
 )
 
 func ConvertInterface(data interface{}) []map[string]string  {
 	object := reflect.ValueOf(data)
-	
+	var resData []map[string]string
 	for i := 0; i < object.Len(); i++ {
-		fmt.Println(object.Index(i))
+		interMap := object.Index(i).Elem()
+		key := interMap.MapKeys()
+		var mapRsd = map[string]string{}
+		for _,v := range key{
+			k := v.String()
+			vv := interMap.MapIndex(v)
+			mapRsd[k] = vv.Elem().String()
+		}
+		resData = append(resData, mapRsd)
 	}
-	return []map[string]string{}
+	return resData
 }
 
 func ReadIp()  (interface{},error) {
@@ -23,6 +32,7 @@ func ReadIp()  (interface{},error) {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+
 	plan, err := ioutil.ReadFile(pwd+"/ip.json")
 	if err != nil{
 		fmt.Println("Reade File",err)
@@ -35,16 +45,16 @@ func ReadIp()  (interface{},error) {
 		fmt.Println("Cannot unmarshal the json ", err)
 		return nil,err
 	}
+
 	return ip,nil
 
 }
 
-func main()  {
+func main() {
 	data,err := ReadIp()
 	if err != nil{
 		return
 	}
 	clean := ConvertInterface(data)
-	fmt.Println(clean)
-
+	action.InPoint(clean)
 }
